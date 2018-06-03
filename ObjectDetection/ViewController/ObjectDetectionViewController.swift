@@ -86,7 +86,9 @@ class ObjectDetectionViewController: ViewController, AVCaptureVideoDataOutputSam
                 fatalError("Could not load model")
             }
             // set up the request using our vision model
-            let classificationRequest = VNCoreMLRequest(model: resNet50Model, completionHandler: handleClassifications)
+            let classificationRequest = VNCoreMLRequest(model: resNet50Model) { [weak self] (request, error) in
+                self?.handleClassifications(request: request, error: error)
+            }
             classificationRequest.imageCropAndScaleOption = .centerCrop
             visionRequests = [classificationRequest]
         } catch {
@@ -115,6 +117,7 @@ class ObjectDetectionViewController: ViewController, AVCaptureVideoDataOutputSam
             print(error)
         }
     }
+    
     func handleClassifications(request: VNRequest, error: Error?) {
         if let theError = error {
             print("Error: \(theError.localizedDescription)")
@@ -142,11 +145,21 @@ class ObjectDetectionViewController: ViewController, AVCaptureVideoDataOutputSam
         previewLayer.frame = previewView.bounds
     }
     
+    @IBAction func doneBtnAction(_ sender: Any) {
+        if let presetingViewController = self.presenting {
+            presetingViewController.dismissViewController(self)
+        } else {
+            self.view.window?.close()
+        }
+    }
+    
     override func viewWillDisappear() {
+        previewLayer.removeFromSuperlayer()
+        gradientLayer.removeFromSuperlayer()
         session.stopRunning()
     }
     
     deinit {
-        
+        NSLog("%@ deinit", self.className)
     }
 }
